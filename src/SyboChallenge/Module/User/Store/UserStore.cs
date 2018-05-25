@@ -13,25 +13,24 @@ namespace SyboChallenge.Module.User.Store
     public class UserStore : IUserStore
     {
         private readonly CloudTable userTable;
+        private readonly CloudTable userNameTable;
 
         public UserStore(AzureTableProvider tables)
         {
             userTable = tables.UserTable;
+            userNameTable = tables.UserNameTable;
         }
 
         public async Task<IEnumerable<Abstraction.User>> Find()
         {
-            var columns = new[] { nameof(UserEntity.Name) };
-            var entities = await userTable.All<UserEntity>(columns);
+            var entities = await userNameTable.All<UserNameEntity>();
             var users = entities.Select(e => new Abstraction.User { Key = e.Key, Name = e.Name });
             return users;
         }
 
         public async Task<Abstraction.User> Find(string name)
         {
-            var rowKey = UserEntity.FormatRowKey(name);
-            var columns = new[] { nameof(UserEntity.Name) };
-            var entity = await userTable.QueryByRowKeySingleOrDefault<UserEntity>(rowKey, columns);
+            var entity = await userNameTable.Find<UserNameEntity>(UserNameEntity.FormatPartitionKey(name), UserNameEntity.FormatRowKey());
 
             if (entity == null)
                 return null;
@@ -41,16 +40,19 @@ namespace SyboChallenge.Module.User.Store
 
         public async Task<OperationResult<IEnumerable<Friend>>> FindFriends(Guid userKey)
         {
-            var entity = await userTable.QueryByPartitionKeySingleOrDefault<UserEntity>(
-                UserEntity.FormatPartitionKey(userKey), new[] { nameof(UserEntity.FriendsJson) });
+            var entity = await userTable.Find<UserEntity>(
+                UserEntity.FormatPartitionKey(userKey),
+                UserEntity.FormatRowKey(),
+                new List<string> { nameof(UserEntity.FriendsJson) });
             if (entity == null)
                 return OperationResult<IEnumerable<Friend>>.Failed(ErrorCode.NotFound, "User not found");
 
             var tasks = entity.Friends.Select(friendKey =>
             {
-                var partitionKey = UserEntity.FormatPartitionKey(friendKey);
-                var columns = new string[] { nameof(UserEntity.Name), nameof(UserEntity.Highscore) };
-                return userTable.QueryByPartitionKeySingleOrDefault<UserEntity>(partitionKey, columns);
+                return userTable.Find<UserEntity>(
+                    UserEntity.FormatPartitionKey(friendKey),
+                    UserEntity.FormatRowKey(),
+                    new List<string> { nameof(UserEntity.Name), nameof(UserEntity.Highscore) });
             });
 
             await Task.WhenAll(tasks);
@@ -64,9 +66,10 @@ namespace SyboChallenge.Module.User.Store
 
         public async Task<OperationResult<State>> FindGameState(Guid userKey)
         {
-            var partitionKey = UserEntity.FormatPartitionKey(userKey);
-            var columns = new[] { nameof(UserEntity.GamesPlayed), nameof(UserEntity.Highscore) };
-            var entity = await userTable.QueryByPartitionKeySingleOrDefault<UserEntity>(partitionKey, columns);
+            var entity = await userTable.Find<UserEntity>(
+                UserEntity.FormatPartitionKey(userKey),
+                UserEntity.FormatRowKey(),
+                new List<string> { nameof(UserEntity.GamesPlayed), nameof(UserEntity.Highscore) });
 
             if (entity == null)
                 return OperationResult<State>.Failed(ErrorCode.NotFound, "User not found");
@@ -79,20 +82,15 @@ namespace SyboChallenge.Module.User.Store
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            var entity = new UserEntity(user.Key, user.Name, 0, 0);
-            await userTable.ExecuteAsync(TableOperation.Insert(entity));
+            await Task.WhenAll(
+                userTable.ExecuteAsync(TableOperation.Insert(new UserEntity(user.Key, user.Name, 0, 0))),
+                userNameTable.ExecuteAsync(TableOperation.Insert(new UserNameEntity(user.Name, user.Key))));
         }
 
         public async Task<OperationResult> UpdateFriends(Guid userKey, IEnumerable<Guid> friendKeys)
         {
-            var user = await userTable.QueryByPartitionKeySingleOrDefault<UserEntity>(UserEntity.FormatPartitionKey(userKey), new[] { nameof(UserEntity.Name) });
-            if (user == null)
-                return OperationResult.Failed(ErrorCode.NotFound, "User not found");
-
-            user.Friends = friendKeys.ToList();
-
-            var entity = new DynamicTableEntity(user.PartitionKey, user.RowKey) { ETag = "*" };
-            entity.Properties.Add(nameof(UserEntity.FriendsJson), new EntityProperty(user.FriendsJson));
+            var entity = new DynamicTableEntity(UserEntity.FormatPartitionKey(userKey), UserEntity.FormatRowKey()) { ETag = "*" };
+            entity.Properties.Add(nameof(UserEntity.FriendsJson), new EntityProperty(UserEntity.FormatFriendsJson(friendKeys)));
             await userTable.ExecuteAsync(TableOperation.Merge(entity));
 
             return OperationResult.Success;
@@ -100,11 +98,7 @@ namespace SyboChallenge.Module.User.Store
 
         public async Task<OperationResult> UpdateGameState(Guid userKey, State state)
         {
-            var user = await userTable.QueryByPartitionKeySingleOrDefault<UserEntity>(UserEntity.FormatPartitionKey(userKey), new[] { nameof(UserEntity.Name) });
-            if (user == null)
-                return OperationResult.Failed(ErrorCode.NotFound, "User not found");
-
-            var entity = new DynamicTableEntity(user.PartitionKey, user.RowKey) { ETag = "*" };
+            var entity = new DynamicTableEntity(UserEntity.FormatPartitionKey(userKey), UserEntity.FormatRowKey()) { ETag = "*" };
             entity.Properties.Add(nameof(UserEntity.GamesPlayed), new EntityProperty(state.GamesPlayed));
             entity.Properties.Add(nameof(UserEntity.Highscore), new EntityProperty(state.Score));
             await userTable.ExecuteAsync(TableOperation.Merge(entity));

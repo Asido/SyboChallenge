@@ -14,25 +14,23 @@ namespace SyboChallenge.Module.User.Store.Entity
             set => PartitionKey = FormatPartitionKey(value);
         }
 
-        [IgnoreProperty]
-        public string Name
-        {
-            get => ParseRowKey(RowKey);
-            set => RowKey = FormatRowKey(value);
-        }
-
+        public string Name { get; set; }
         public int GamesPlayed { get; set; }
         public int Highscore { get; set; }
 
         public List<Guid> Friends
         {
             get => JsonConvert.DeserializeObject<List<Guid>>(FriendsJson);
-            set => FriendsJson = JsonConvert.SerializeObject(value);
+            set => FriendsJson = FormatFriendsJson(value);
         }
         public string FriendsJson { get; set; }
 
-        public UserEntity() { }
-        public UserEntity(Guid key, string name, int gamesPlayed, int highscore)
+        public UserEntity()
+        {
+            RowKey = FormatRowKey();
+        }
+
+        public UserEntity(Guid key, string name, int gamesPlayed, int highscore) : this()
         {
             Key = key;
             Name = name;
@@ -43,7 +41,9 @@ namespace SyboChallenge.Module.User.Store.Entity
 
         public static string FormatPartitionKey(Guid key) => key.ToString("D");
         public static Guid ParsePartitionKey(string partitionKey) => Guid.ParseExact(partitionKey, "D");
-        public static string FormatRowKey(string name) => name;
-        public static string ParseRowKey(string rowKey) => rowKey;
+
+        public static string FormatRowKey() => "";
+
+        public static string FormatFriendsJson(IEnumerable<Guid> keys) => JsonConvert.SerializeObject(keys);
     }
 }

@@ -7,6 +7,7 @@
 
         public int BatchOperationSize { get; set; } = 100;
 
-        public string UserTableNme { get; set; } = "User";
+        public string UserTableName { get; set; } = "User";
+        public string UserNameTableName { get; set; } = "UserName";
     }
 }
