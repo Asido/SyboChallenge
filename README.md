@@ -23,7 +23,7 @@ User
 
 The current system is too simple for showing a full potential of the architecture. The figure above shows a possible future system, that could evolve once further requirements are known. The system is a monotlith but divided into separate modules. Each module has a single responsibility and own storage.
 
-Eventually game state will likely to be stored in another module responsible for coordinating the games. The current `state` object doesn't really fit this description, because the current data - highscore and games played - is not a game state, but an aggregated statistic of an individual player. Thus the 2 fields are currently fields on user entity.
+Eventually game state will likely be stored in another module responsible for coordinating games. The current `state` object doesn't really fit this description, because the current data - highscore and games played - is not a game state, but an aggregated statistic of an individual player. Thus the 2 fields are currently fields on user entity.
 
 ## Module architecture
 
@@ -41,7 +41,7 @@ Storage entities and database technology are strictly encapsulated in the store 
 
 ## Gateway
 
-The gateway server aggregates the modules into a monolith and exposes a REST API to the public. The architecture, however, is extremely flexible. Modules get dependencies via dependency injection. Since dependencies are referenced via abstractions, actual implementations can be either a reference to an instance within the same module or even a reference to a client library, which communicates with the dependency on another machine via REST or other form of RPC. Such architecture allows to run each module on individual machines if there is a need with little source code changes.
+The gateway server aggregates the modules into a monolith and exposes REST API to the public. The architecture, however, is extremely flexible. Modules get dependencies via dependency injection. Since dependencies are referenced via abstractions, actual implementations can be either a reference to an instance within the same module or a reference to a client library, which communicates with the dependency on another machine via REST or other form of RPC. Such architecture allows to run each module on individual machines if there is a need. All that will require little source code changes.
 
 ## Database
 
@@ -55,7 +55,7 @@ Given the scale requirements it is important to choose the right database techno
 
 #### Azure
 
-`Cosmos DB` is a document NoSQL store with infinite scale. It is globally distributed and ensures single-digit millisecond latencies at the 99th percentile. Accounts have no upper limit on throughput and support >10 million operations/s per table. By default all the data it stores is indexed making the maintainance even less time consuming. It also provides a protocol compatibility with many other database systems, such as MongoDB, Cassandra, Table Storage, etc. It almost sounds too good to be true. However, it's pricing model is on the higher end. Cosmos DB charge for request units (RU) per collection. A minimum RU per collection costs approximately $25 per month. That is the main criteria making me look further.
+`Cosmos DB` is a document NoSQL store with infinite scale. It is globally distributed and ensures single-digit millisecond latencies at the 99th percentile. Accounts have no upper limit on throughput and support >10 million operations/s per table. By default all the data it stores is indexed providing superb query flexibility. It also provides a protocol compatibility with many other database systems, such as MongoDB, Cassandra, Table Storage, etc, which means favorite tools from other database vendors can be used to interact with Cosmos DB. It almost sounds too good to be true. However, it's pricing model is on the higher end. Cosmos DB charge for request units (RU) per collection. A minimum RU per collection costs approximately $25 per month. That is the main criteria making me look further.
 
 `Table Storage` is a scalable key-value store designed for large data. A single account can handle up to 20,000 requests per second. A huge selling point of Table Storage is pricing - $0.07/GB per month and $0.00036 per 10,000 transactions for tables. Any type of operation against the storage is counted as a transaction, including reads, writes, and deletes. `Cosmos DB` supports Table Storage protocol, which makes moving from one to the other a trivial matter.
 
