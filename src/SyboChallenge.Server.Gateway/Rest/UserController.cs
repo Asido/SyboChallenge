@@ -3,7 +3,7 @@ using SyboChallenge.Module.User.Abstraction;
 using System;
 using System.Threading.Tasks;
 
-namespace SyboChallenge.Server.Api.Rest
+namespace SyboChallenge.Server.Gateway.Rest
 {
     public class PutFriendsRequest
     {

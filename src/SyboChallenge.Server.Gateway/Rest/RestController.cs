@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SyboChallenge.Server.Api.Rest
+namespace SyboChallenge.Server.Gateway.Rest
 {
     public class RestError
     {

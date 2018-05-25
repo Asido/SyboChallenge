@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SyboChallenge.Core.Setup;
 
-namespace SyboChallenge.Server.Api
+namespace SyboChallenge.Server.Gateway
 {
     public class Program
     {
