@@ -12,25 +12,23 @@ namespace SyboChallenge.Module.User.Store
 {
     public class UserStore : IUserStore
     {
-        private readonly CloudTable userTable;
-        private readonly CloudTable userNameTable;
+        private readonly AzureTableProvider db;
 
-        public UserStore(AzureTableProvider tables)
+        public UserStore(AzureTableProvider db)
         {
-            userTable = tables.UserTable;
-            userNameTable = tables.UserNameTable;
+            this.db = db;
         }
 
         public async Task<IEnumerable<Abstraction.User>> Find()
         {
-            var entities = await userNameTable.All<UserNameEntity>();
+            var entities = await db.UserNameTable.All<UserNameEntity>();
             var users = entities.Select(e => new Abstraction.User { Key = e.Key, Name = e.Name });
             return users;
         }
 
         public async Task<Abstraction.User> Find(string name)
         {
-            var entity = await userNameTable.Find<UserNameEntity>(UserNameEntity.FormatPartitionKey(name), UserNameEntity.FormatRowKey());
+            var entity = await db.UserNameTable.Find<UserNameEntity>(UserNameEntity.FormatPartitionKey(name), UserNameEntity.FormatRowKey());
 
             if (entity == null)
                 return null;
@@ -40,7 +38,7 @@ namespace SyboChallenge.Module.User.Store
 
         public async Task<OperationResult<IEnumerable<Friend>>> FindFriends(Guid userKey)
         {
-            var entity = await userTable.Find<UserEntity>(
+            var entity = await db.UserTable.Find<UserEntity>(
                 UserEntity.FormatPartitionKey(userKey),
                 UserEntity.FormatRowKey(),
                 new List<string> { nameof(UserEntity.FriendsJson) });
@@ -49,7 +47,7 @@ namespace SyboChallenge.Module.User.Store
 
             var tasks = entity.Friends.Select(friendKey =>
             {
-                return userTable.Find<UserEntity>(
+                return db.UserTable.Find<UserEntity>(
                     UserEntity.FormatPartitionKey(friendKey),
                     UserEntity.FormatRowKey(),
                     new List<string> { nameof(UserEntity.Name), nameof(UserEntity.Highscore) });
@@ -66,7 +64,7 @@ namespace SyboChallenge.Module.User.Store
 
         public async Task<OperationResult<State>> FindGameState(Guid userKey)
         {
-            var entity = await userTable.Find<UserEntity>(
+            var entity = await db.UserTable.Find<UserEntity>(
                 UserEntity.FormatPartitionKey(userKey),
                 UserEntity.FormatRowKey(),
                 new List<string> { nameof(UserEntity.GamesPlayed), nameof(UserEntity.Highscore) });
@@ -83,15 +81,15 @@ namespace SyboChallenge.Module.User.Store
                 throw new ArgumentNullException(nameof(user));
 
             await Task.WhenAll(
-                userTable.ExecuteAsync(TableOperation.Insert(new UserEntity(user.Key, user.Name, 0, 0))),
-                userNameTable.ExecuteAsync(TableOperation.Insert(new UserNameEntity(user.Name, user.Key))));
+                db.UserTable.ExecuteAsync(TableOperation.Insert(new UserEntity(user.Key, user.Name, 0, 0))),
+                db.UserNameTable.ExecuteAsync(TableOperation.Insert(new UserNameEntity(user.Name, user.Key))));
         }
 
         public async Task<OperationResult> UpdateFriends(Guid userKey, IEnumerable<Guid> friendKeys)
         {
             var entity = new DynamicTableEntity(UserEntity.FormatPartitionKey(userKey), UserEntity.FormatRowKey()) { ETag = "*" };
             entity.Properties.Add(nameof(UserEntity.FriendsJson), new EntityProperty(UserEntity.FormatFriendsJson(friendKeys)));
-            await userTable.ExecuteAsync(TableOperation.Merge(entity));
+            await db.UserTable.ExecuteAsync(TableOperation.Merge(entity));
 
             return OperationResult.Success;
         }
@@ -101,7 +99,7 @@ namespace SyboChallenge.Module.User.Store
             var entity = new DynamicTableEntity(UserEntity.FormatPartitionKey(userKey), UserEntity.FormatRowKey()) { ETag = "*" };
             entity.Properties.Add(nameof(UserEntity.GamesPlayed), new EntityProperty(state.GamesPlayed));
             entity.Properties.Add(nameof(UserEntity.Highscore), new EntityProperty(state.Score));
-            await userTable.ExecuteAsync(TableOperation.Merge(entity));
+            await db.UserTable.ExecuteAsync(TableOperation.Merge(entity));
 
             return OperationResult.Success;
         }

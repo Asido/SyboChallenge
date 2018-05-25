@@ -6,14 +6,14 @@ namespace SyboChallenge.Core.AzureTableStorage
 {
     public class AzureTableProvider
     {
-        public readonly AzureTableOptions options;
-        public readonly CloudStorageAccount storageAccount;
-        public readonly CloudTableClient client;
+        private readonly AzureTableOptions options;
+        private readonly CloudStorageAccount storageAccount;
+        private CloudTableClient client => storageAccount.CreateCloudTableClient();
 
-        public readonly CloudTable UserTable;
-        public readonly CloudTable UserNameTable;
+        public CloudTable UserTable => client.GetTableReference(options.UserTableName);
+        public CloudTable UserNameTable => client.GetTableReference(options.UserNameTableName);
 
-        public readonly IEnumerable<CloudTable> AllTables;
+        public IEnumerable<CloudTable> AllTables => new[] { UserTable, UserNameTable };
 
         public AzureTableProvider(AzureTableOptions options)
         {
@@ -23,13 +23,6 @@ namespace SyboChallenge.Core.AzureTableStorage
                 storageAccount = CloudStorageAccount.DevelopmentStorageAccount;
             else
                 storageAccount = CloudStorageAccount.Parse(options.ConnectionString);
-
-            client = storageAccount.CreateCloudTableClient();
-
-            UserTable = client.GetTableReference(options.UserTableName);
-            UserNameTable = client.GetTableReference(options.UserNameTableName);
-
-            AllTables = new[] { UserTable, UserNameTable };
         }
     }
 }

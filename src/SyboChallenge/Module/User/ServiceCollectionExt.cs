@@ -37,8 +37,7 @@ namespace SyboChallenge.Module.User
     {
         public static IServiceCollection AddUser(this IServiceCollection services, Action<UserBuilder> configureAction)
         {
-            services
-                .AddService<IUserService, UserService>();
+            services.AddService<IUserService, UserService>();
 
             var builder = new UserBuilder(services);
             configureAction(builder);
