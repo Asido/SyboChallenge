@@ -117,11 +117,6 @@ Architecturally the service is very well able to scale horizontally. However, th
 
 Mutable data additionally has to control concurrent updates. A typical approach is to use an entity tag (ETag), which acts as data version. Updating data requires etag to be passed by the client, which indicates the revision of the data it is modifying. A conflict occurs if the revision in the database differs from the passed one.
 
-## Live
-
-The REST API is available at:
-[https://sybo-gateway.azurewebsites.net/](https://sybo-gateway.azurewebsites.net/user)
-
 ## Design recommendation to the client
 
 The game client of this backend has a REST API design built-in and therefore dictates the design of the backend. I would like to propose to use a REST API standard, such as [OData](http://www.odata.org/). OData stands for **Open Data Protocol**. It is an [ISO/IEC approved](https://www.oasis-open.org/news/pr/iso-iec-jtc-1-approves-oasis-odata-standard-for-open-data-exchange), [OASIS standard](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=odata) that defines a set of best practices for building and consuming RESTful APIs.
@@ -130,3 +125,8 @@ It offers several advantages over a custom made REST API, such as the one I buil
 * It is an open standard and ensures consistent and clean API. Server OData libraries are able to validate the API to make sure that the registered endpoints and entity collections comply with the standard.
 * It provides a machine-readable description of the data model of the API, called **OData metadata**. It enables the use of powerful generic client proxies and tools to consume the API. As an example, there are tools that can consume the metadata and generate API client code for dozens of programming language. On top of that, popular office suits, such as Microsoft Excel and LibreOffice Calc can use OData API as a data source.
 * It provides a standardized [query option syntax](http://docs.oasis-open.org/odata/odata/v4.0/odata-v4.0-part2-url-conventions.html), which allow clients to tailor the requests and their responses to their needs. Such as specify data filters, ordering, paging, property selection and transformation, etc.
+
+## Live
+
+The REST API is available at:
+[https://sybo-gateway.azurewebsites.net/](https://sybo-gateway.azurewebsites.net/user)
