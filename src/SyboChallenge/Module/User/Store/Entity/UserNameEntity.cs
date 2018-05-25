@@ -12,17 +12,17 @@ namespace SyboChallenge.Module.User.Store.Entity
             set => PartitionKey = FormatPartitionKey(value);
         }
 
-        public Guid Key { get; set; }
+        public Guid Id { get; set; }
 
         public UserNameEntity()
         {
             RowKey = FormatRowKey();
         }
 
-        public UserNameEntity(string name, Guid key) : this()
+        public UserNameEntity(string name, Guid id) : this()
         {
             Name = name;
-            Key = key;
+            Id = id;
         }
 
         public static string FormatPartitionKey(string name) => name;

@@ -22,7 +22,7 @@ namespace SyboChallenge.Module.User.Store
         public async Task<IEnumerable<Abstraction.User>> Find()
         {
             var entities = await db.UserNameTable.All<UserNameEntity>();
-            var users = entities.Select(e => new Abstraction.User { Key = e.Key, Name = e.Name });
+            var users = entities.Select(e => new Abstraction.User { Id = e.Id, Name = e.Name });
             return users;
         }
 
@@ -33,22 +33,22 @@ namespace SyboChallenge.Module.User.Store
             if (entity == null)
                 return null;
 
-            return new Abstraction.User { Key = entity.Key, Name = entity.Name };
+            return new Abstraction.User { Id = entity.Id, Name = entity.Name };
         }
 
-        public async Task<OperationResult<IEnumerable<Friend>>> FindFriends(Guid userKey)
+        public async Task<OperationResult<IEnumerable<Friend>>> FindFriends(Guid userId)
         {
             var entity = await db.UserTable.Find<UserEntity>(
-                UserEntity.FormatPartitionKey(userKey),
+                UserEntity.FormatPartitionKey(userId),
                 UserEntity.FormatRowKey(),
                 new List<string> { nameof(UserEntity.FriendsJson) });
             if (entity == null)
                 return OperationResult<IEnumerable<Friend>>.Failed(ErrorCode.NotFound, "User not found");
 
-            var tasks = entity.Friends.Select(friendKey =>
+            var tasks = entity.Friends.Select(friendId =>
             {
                 return db.UserTable.Find<UserEntity>(
-                    UserEntity.FormatPartitionKey(friendKey),
+                    UserEntity.FormatPartitionKey(friendId),
                     UserEntity.FormatRowKey(),
                     new List<string> { nameof(UserEntity.Name), nameof(UserEntity.Highscore) });
             });
@@ -58,14 +58,14 @@ namespace SyboChallenge.Module.User.Store
             var friends = tasks
                 .Select(task => task.Result)
                 .Where(e => e != null)
-                .Select(e => new Friend { Key = e.Key, Name = e.Name, Highscore = e.Highscore });
+                .Select(e => new Friend { Id = e.Id, Name = e.Name, Highscore = e.Highscore });
             return OperationResult<IEnumerable<Friend>>.Success(friends);
         }
 
-        public async Task<OperationResult<State>> FindGameState(Guid userKey)
+        public async Task<OperationResult<State>> FindGameState(Guid userId)
         {
             var entity = await db.UserTable.Find<UserEntity>(
-                UserEntity.FormatPartitionKey(userKey),
+                UserEntity.FormatPartitionKey(userId),
                 UserEntity.FormatRowKey(),
                 new List<string> { nameof(UserEntity.GamesPlayed), nameof(UserEntity.Highscore) });
 
@@ -81,22 +81,22 @@ namespace SyboChallenge.Module.User.Store
                 throw new ArgumentNullException(nameof(user));
 
             await Task.WhenAll(
-                db.UserTable.ExecuteAsync(TableOperation.Insert(new UserEntity(user.Key, user.Name, 0, 0))),
-                db.UserNameTable.ExecuteAsync(TableOperation.Insert(new UserNameEntity(user.Name, user.Key))));
+                db.UserTable.ExecuteAsync(TableOperation.Insert(new UserEntity(user.Id, user.Name, 0, 0))),
+                db.UserNameTable.ExecuteAsync(TableOperation.Insert(new UserNameEntity(user.Name, user.Id))));
         }
 
-        public async Task<OperationResult> UpdateFriends(Guid userKey, IEnumerable<Guid> friendKeys)
+        public async Task<OperationResult> UpdateFriends(Guid userId, IEnumerable<Guid> friendIds)
         {
-            var entity = new DynamicTableEntity(UserEntity.FormatPartitionKey(userKey), UserEntity.FormatRowKey()) { ETag = "*" };
-            entity.Properties.Add(nameof(UserEntity.FriendsJson), new EntityProperty(UserEntity.FormatFriendsJson(friendKeys)));
+            var entity = new DynamicTableEntity(UserEntity.FormatPartitionKey(userId), UserEntity.FormatRowKey()) { ETag = "*" };
+            entity.Properties.Add(nameof(UserEntity.FriendsJson), new EntityProperty(UserEntity.FormatFriendsJson(friendIds)));
             await db.UserTable.ExecuteAsync(TableOperation.Merge(entity));
 
             return OperationResult.Success;
         }
 
-        public async Task<OperationResult> UpdateGameState(Guid userKey, State state)
+        public async Task<OperationResult> UpdateGameState(Guid userId, State state)
         {
-            var entity = new DynamicTableEntity(UserEntity.FormatPartitionKey(userKey), UserEntity.FormatRowKey()) { ETag = "*" };
+            var entity = new DynamicTableEntity(UserEntity.FormatPartitionKey(userId), UserEntity.FormatRowKey()) { ETag = "*" };
             entity.Properties.Add(nameof(UserEntity.GamesPlayed), new EntityProperty(state.GamesPlayed));
             entity.Properties.Add(nameof(UserEntity.Highscore), new EntityProperty(state.Score));
             await db.UserTable.ExecuteAsync(TableOperation.Merge(entity));

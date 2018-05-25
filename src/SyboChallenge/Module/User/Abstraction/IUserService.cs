@@ -10,10 +10,10 @@ namespace SyboChallenge.Module.User.Abstraction
         Task<IEnumerable<User>> Find();
         Task<User> FindOrCreate(string name);
 
-        Task<OperationResult<State>> FindGameState(Guid userKey);
-        Task<OperationResult> UpdateGameState(Guid userKey, State state);
+        Task<OperationResult<State>> FindGameState(Guid userId);
+        Task<OperationResult> UpdateGameState(Guid userId, State state);
 
-        Task<OperationResult<IEnumerable<Friend>>> FindFriends(Guid userKey);
-        Task<OperationResult> UpdateFriends(Guid userKey, IEnumerable<Guid> friendKeys);
+        Task<OperationResult<IEnumerable<Friend>>> FindFriends(Guid userId);
+        Task<OperationResult> UpdateFriends(Guid userId, IEnumerable<Guid> friendIds);
     }
 }

@@ -108,7 +108,7 @@ namespace SyboChallenge.Benchmark
                 .Select(async e =>
                 {
                     var user = benchmarkUser[operationsCompleted % benchmarkUser.Count];
-                    await userService.UpdateGameState(user.Key, new State { GamesPlayed = 42, Score = 50 }).ConfigureAwait(false);
+                    await userService.UpdateGameState(user.Id, new State { GamesPlayed = 42, Score = 50 }).ConfigureAwait(false);
                     Interlocked.Increment(ref operationsCompleted);
                 });
             await Task.WhenAll(tasks).ConfigureAwait(false);

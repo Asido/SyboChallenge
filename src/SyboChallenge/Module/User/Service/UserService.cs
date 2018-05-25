@@ -25,7 +25,7 @@ namespace SyboChallenge.Module.User.Service
             {
                 user = new Abstraction.User
                 {
-                    Key = Guid.NewGuid(),
+                    Id = Guid.NewGuid(),
                     Name = name
                 };
                 await store.Insert(user);
@@ -34,10 +34,10 @@ namespace SyboChallenge.Module.User.Service
             return user;
         }
 
-        public Task<OperationResult<State>> FindGameState(Guid userKey) => store.FindGameState(userKey);
-        public Task<OperationResult> UpdateGameState(Guid userKey, State state) => store.UpdateGameState(userKey, state);
+        public Task<OperationResult<State>> FindGameState(Guid userId) => store.FindGameState(userId);
+        public Task<OperationResult> UpdateGameState(Guid userId, State state) => store.UpdateGameState(userId, state);
 
-        public Task<OperationResult<IEnumerable<Friend>>> FindFriends(Guid userKey) => store.FindFriends(userKey);
-        public Task<OperationResult> UpdateFriends(Guid userKey, IEnumerable<Guid> friendKeys) => store.UpdateFriends(userKey, friendKeys);
+        public Task<OperationResult<IEnumerable<Friend>>> FindFriends(Guid userId) => store.FindFriends(userId);
+        public Task<OperationResult> UpdateFriends(Guid userId, IEnumerable<Guid> friendIds) => store.UpdateFriends(userId, friendIds);
     }
 }

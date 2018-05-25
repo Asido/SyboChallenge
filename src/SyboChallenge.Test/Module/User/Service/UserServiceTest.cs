@@ -28,7 +28,7 @@ namespace SyboChallenge.Test.Module.User.Service
             var user = await UserService.FindOrCreate(name);
 
             user.Should().NotBeNull();
-            user.Key.Should().NotBe(default);
+            user.Id.Should().NotBe(default);
             user.Name.Should().Be(name);
         }
 
@@ -44,7 +44,7 @@ namespace SyboChallenge.Test.Module.User.Service
         public async Task CanFindExistingUserEmptyFriendlist()
         {
             var user = await UserService.FindOrCreate(StringGenerator.Unique());
-            var result = await UserService.FindFriends(user.Key);
+            var result = await UserService.FindFriends(user.Id);
             result.Succeeded.Should().BeTrue();
 
             var friends = result.Value;
@@ -56,20 +56,20 @@ namespace SyboChallenge.Test.Module.User.Service
         public async Task CanUpdateFriendlist()
         {
             var user = await UserService.FindOrCreate(StringGenerator.Unique());
-            var friendKeys = new[]
+            var friendIds = new[]
             {
-                (await UserService.FindOrCreate(StringGenerator.Unique())).Key,
-                (await UserService.FindOrCreate(StringGenerator.Unique())).Key,
-                (await UserService.FindOrCreate(StringGenerator.Unique())).Key
+                (await UserService.FindOrCreate(StringGenerator.Unique())).Id,
+                (await UserService.FindOrCreate(StringGenerator.Unique())).Id,
+                (await UserService.FindOrCreate(StringGenerator.Unique())).Id
             };
 
-            await UserService.UpdateFriends(user.Key, friendKeys);
-            var result = await UserService.FindFriends(user.Key);
+            await UserService.UpdateFriends(user.Id, friendIds);
+            var result = await UserService.FindFriends(user.Id);
             result.Succeeded.Should().BeTrue();
 
             var foundFriends = result.Value;
             foundFriends.Should().HaveCount(3);
-            foundFriends.Select(e => e.Key).Should().BeEquivalentTo(friendKeys);
+            foundFriends.Select(e => e.Id).Should().BeEquivalentTo(friendIds);
         }
 
         [Fact]
@@ -84,7 +84,7 @@ namespace SyboChallenge.Test.Module.User.Service
         public async Task CanFindExistingUserGameState()
         {
             var user = await UserService.FindOrCreate(StringGenerator.Unique());
-            var result = await UserService.FindGameState(user.Key);
+            var result = await UserService.FindGameState(user.Id);
 
             result.Succeeded.Should().BeTrue();
 
@@ -98,8 +98,8 @@ namespace SyboChallenge.Test.Module.User.Service
         public async Task CanUpdateGameState()
         {
             var user = await UserService.FindOrCreate(StringGenerator.Unique());
-            await UserService.UpdateGameState(user.Key, new State { GamesPlayed = 42, Score = 9000 });
-            var result = await UserService.FindGameState(user.Key);
+            await UserService.UpdateGameState(user.Id, new State { GamesPlayed = 42, Score = 9000 });
+            var result = await UserService.FindGameState(user.Id);
 
             result.Succeeded.Should().BeTrue();
 

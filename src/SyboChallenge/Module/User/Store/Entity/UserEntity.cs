@@ -8,7 +8,7 @@ namespace SyboChallenge.Module.User.Store.Entity
     public class UserEntity : TableEntity
     {
         [IgnoreProperty]
-        public Guid Key
+        public Guid Id
         {
             get => ParsePartitionKey(PartitionKey);
             set => PartitionKey = FormatPartitionKey(value);
@@ -30,16 +30,16 @@ namespace SyboChallenge.Module.User.Store.Entity
             RowKey = FormatRowKey();
         }
 
-        public UserEntity(Guid key, string name, int gamesPlayed, int highscore) : this()
+        public UserEntity(Guid id, string name, int gamesPlayed, int highscore) : this()
         {
-            Key = key;
+            Id = id;
             Name = name;
             GamesPlayed = gamesPlayed;
             Highscore = highscore;
             Friends = new List<Guid>();
         }
 
-        public static string FormatPartitionKey(Guid key) => key.ToString("D");
+        public static string FormatPartitionKey(Guid id) => id.ToString("D");
         public static Guid ParsePartitionKey(string partitionKey) => Guid.ParseExact(partitionKey, "D");
 
         public static string FormatRowKey() => "";
