@@ -61,7 +61,7 @@ Given the scale requirements it is important to choose the right database techno
 
 #### Google Cloud
 
-`Cloud Datastore` is a NoSQL document store similar to DynamoDB in terms of features, but closer to Cosmos DB in terms of throughput scale. It has no throughput limit, which makes it a very competitive choice for the project.
+`Cloud Datastore` is a NoSQL document store similar to DynamoDB in terms of features, but closer to Cosmos DB in terms of throughput and scale. The pricing is $0.18/GB per month. All that makes it a very competitive choice for the project.
 
 #### And the choice is ...
 
